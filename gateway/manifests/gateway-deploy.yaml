@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: xuancuong209/gateway:v3
+          image: xuancuong209/gateway:v6
           envFrom:
           - configMapRef:
               name: gateway-configmap
