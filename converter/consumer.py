@@ -13,7 +13,7 @@ def main():
     db_mp3s = client.mp3s
     # gridfs
     fs_videos = gridfs.GridFS(db_videos)
-    fs_mp3 = gridfs.GridFS(db_mp3s)
+    fs_mp3s = gridfs.GridFS(db_mp3s)
 
     # rabbitmq_connection
     connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
@@ -21,7 +21,7 @@ def main():
     channel = connection.channel()
 
     def callback(ch, method, properties, body):
-        err = to_mp3.start(body, fs_videos, fs_mp3, ch)
+        err = to_mp3.start(body, fs_videos, fs_mp3s, ch)
         if err:
             ch.basic_nack(delivery_tag=method.delivery_tag)
         else:

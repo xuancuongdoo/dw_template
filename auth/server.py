@@ -7,68 +7,71 @@ from flask_mysqldb import MySQL
 server = Flask(__name__)
 mysql = MySQL(server)
 
-# configuration
-server.config['MYSQL_HOST'] = os.environ['MYSQL_HOST']
-server.config['MYSQL_USER'] = os.environ['MYSQL_USER']
-server.config['MYSQL_PASSWORD'] = os.environ['MYSQL_PASSWORD']
-server.config['MYSQL_DB'] = os.environ['MYSQL_DB']
-server.config['MYSQL_PORT'] = os.environ['MYSQL_PORT']
+# config
+server.config["MYSQL_HOST"] = os.environ.get("MYSQL_HOST")
+server.config["MYSQL_USER"] = os.environ.get("MYSQL_USER")
+server.config["MYSQL_PASSWORD"] = os.environ.get("MYSQL_PASSWORD")
+server.config["MYSQL_DB"] = os.environ.get("MYSQL_DB")
+server.config["MYSQL_PORT"] = 3306
 
 
-@server.route('/login', methods=['POST'])
+@server.route("/login", methods=["POST"])
 def login():
     auth = request.authorization
     if not auth:
-        return 'Unauthorized', 401
+        return "missing credentials", 401
 
+    # check db for username and password
     cur = mysql.connection.cursor()
-
     res = cur.execute(
-        "SELECT email, password FROM users WHERE email = %s", (auth.username,)
+        "SELECT email, password FROM user WHERE email=%s", (auth.username,)
     )
 
     if res > 0:
-        user = cur.fetchone()
-        password = user[1]
-        email = user[0]
+        user_row = cur.fetchone()
+        email = user_row[0]
+        password = user_row[1]
 
-        if (auth.username, auth.password) != (email, password):
-            return 'Unauthorized', 401
+        if auth.username != email or auth.password != password:
+            return "invalid credentials", 401
         else:
-            token = create_jwt(auth.username, os.environ['SECRET_KEY'], True)
-            return token
+            return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
     else:
-        return "Unauthorized", 401
+        return "invalide credentials", 401
 
 
-@server.route('/validate', methods=['POST'])
+@server.route("/validate", methods=["POST"])
 def validate():
-    encoded_jwt = request.headers.get['Authorization']
+    encoded_jwt = request.headers["Authorization"]
 
     if not encoded_jwt:
-        return 'Unauthorized', 401
+        return "missing credentials", 401
 
-    encoded_jwt = encoded_jwt.split(' ')[1]
+    encoded_jwt = encoded_jwt.split(" ")[1]
+
     try:
         decoded = jwt.decode(
-            encoded_jwt, os.environ['SECRET_KEY'], algorithms=['HS256'])
+            encoded_jwt, os.environ.get("JWT_SECRET"), algorithms=["HS256"]
+        )
     except:
-        return 'Unauthorized', 403
+        return "not authorized", 403
+
     return decoded, 200
 
 
-def create_jwt(usrname, secret_key, authz):
-    token = jwt.encode(
+def createJWT(username, secret, authz):
+    return jwt.encode(
         {
-            'user': usrname,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30),
-            'is_admin': authz
+            "username": username,
+            "exp": datetime.datetime.now(tz=datetime.timezone.utc)
+            + datetime.timedelta(days=1),
+            "iat": datetime.datetime.utcnow(),
+            "admin": authz,
         },
-        secret_key,
-        algorithm='HS256'
+        secret,
+        algorithm="HS256",
     )
-    return token
 
 
-if __name__ == '__main__':
-    server.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=5000)

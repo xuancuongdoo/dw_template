@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: xuancuong209/auth
+          image: xuancuong209/auth:latest
           ports:
             - containerPort: 5000
           envFrom:

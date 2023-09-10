@@ -46,6 +46,7 @@ def upload():
             err = util.upload(f, fs, channel, access)
 
             if err:
+                print(err)
                 return err
         return "Success", 200
     else:

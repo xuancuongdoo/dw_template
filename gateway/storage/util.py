@@ -6,6 +6,7 @@ def upload(f, fs, channel, access):
     try:
         fid = fs.put(f)
     except Exception as e:
+        print(e)
         return "Internal Server Error", 500
 
     message = {
@@ -23,6 +24,8 @@ def upload(f, fs, channel, access):
                 delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
             )
         )
-    except Exception as e:
+    except Exception as err:
+        print(fid)
+        print(err)
         fs.delete(fid)
         return "Internal Server Error", 500
