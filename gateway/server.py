@@ -7,16 +7,26 @@ from flask import request, Flask
 from auth import validate
 from auth_svc import access
 from storage import util
+from bson.objectid import ObjectId
 
 server = Flask(__name__)
+
 mongo_video = PyMongo(
     server, uri="mongodb://host.minikube.internal:27017/videos")
-fs = gridfs.GridFS(mongo_video.db)
+
+
+mongo_mp3 = PyMongo(
+    server, uri="mongodb://host.minikube.internal:27017/mp3")
+
+
+fs_video = gridfs.GridFS(mongo_video.db)
+fs_mp3 = gridfs.GridFS(mongo_mp3.db)
 
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(
         "rabbitmq"
     ))
+
 channel = connection.channel()
 
 
@@ -43,7 +53,7 @@ def upload():
         if len(request.files) > 1 or len(request.files) < 1:
             return "Only one file allowed", 400
         for _, f in request.files.items():
-            err = util.upload(f, fs, channel, access)
+            err = util.upload(f, fs_video, channel, access)
 
             if err:
                 print(err)
