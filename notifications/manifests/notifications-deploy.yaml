@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+  labels:
+    app: notifications
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: notifications
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 8
+  template:
+    metadata:
+      labels:
+        app: notifications
+    spec:
+      containers:
+        - name: notifications
+          image: xuancuong209/notifications:latest
+          envFrom:
+            - configMapRef:
+                name: notifications-configmap
+            - secretRef:
+                name: notifications-secret

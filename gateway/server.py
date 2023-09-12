@@ -3,7 +3,7 @@ import os
 import gridfs
 import pika
 import json
-from flask import request, Flask
+from flask import request, Flask, sendfile
 from auth import validate
 from auth_svc import access
 from storage import util
@@ -61,6 +61,27 @@ def upload():
         return "Success", 200
     else:
         return "not authorized", 401
+
+
+@server.route("/upload", methods=["POST"])
+def download():
+    access, err = validate.token(request)
+
+    access = json.loads(access)
+
+    if access["admin"]:
+        fid_string = request.args.get("fid")
+
+        if not fid_string:
+            return "fid is required", 400
+
+        try:
+            out = fs_mp3.get(ObjectId(fid_string))
+            return sendfile(out, download_name=f'{fid_string}.mp3')
+        except Exception as err:
+            print(err)
+            return "ISE", 500
+    return "not authorized", 401
 
 
 if __name__ == "__main__":

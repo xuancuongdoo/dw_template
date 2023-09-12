@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notifications-configmap
+data:
+  GMAIL_USERNAME: "gmail"
+  GMAIL_PASSWORD: "password"
